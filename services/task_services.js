@@ -5,13 +5,16 @@ const Task = require('../model/tasks');
 
 async function getTasks(query) {
     try {
+        let count_query = Object.assign({}, query);
         let aggregate_query = _buildAggregation(query);
-        let data = await Task.aggregate(aggregate_query);
-        return data;
+        let aggregate_count_query = _buildAggregation(count_query, true);
+        let data = await Promise.all([Task.aggregate(aggregate_query), Task.aggregate(aggregate_count_query)]);
+        let [task_list, count] = data;
+        return { count: count[0].id, task_list };
     } catch (err) { throw err }
 }
 
-function _buildAggregation(query) {
+function _buildAggregation(query, count = false) {
     try {
         let aggregate_query = [];
         if (!query) throw 'invalid request';
@@ -25,8 +28,11 @@ function _buildAggregation(query) {
         });
         if (query.filter.length) aggregate_query.push({ $match: { $or: query.filter } });
         if (query.sort_by) aggregate_query.push({ $sort: { [query.sort_by]: parseInt(query.sort_order == 'descend' ? -1 : 1) } });
-        if (query.offset) aggregate_query.push({ $skip: parseInt(query.offset) });
-        if (query.limit) aggregate_query.push({ $limit: parseInt(query.limit) });
+        if (!count) {
+            if (query.offset) aggregate_query.push({ $skip: parseInt(query.offset) });
+            if (query.limit) aggregate_query.push({ $limit: parseInt(query.limit) });
+        }
+        if (count) aggregate_query.push({ $count: "id" });
         return aggregate_query;
     } catch (err) { throw err }
 }
