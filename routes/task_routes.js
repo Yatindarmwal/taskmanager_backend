@@ -1,11 +1,8 @@
 'use strict';
 
 const express = require('express');
-const { query } = require('express');
 const router = express.Router();
 const task_services = require('../services/task_services');
-const Task = require('../model/tasks');
-
 
 router.get('/task', async (req, res) => {
     try {

@@ -1,7 +1,10 @@
 `use strict`;
 require('./services/database');
-const express = require('express');
-const app = express();
+var express = require('express')
+var cors = require('cors')
+var app = express()
+app.use(cors());
+
 const port = 5000;
 
 app.use(require('./routes/task_routes'));
